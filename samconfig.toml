@@ -15,10 +15,10 @@ lint = true
 [default.deploy.parameters]
 capabilities = "CAPABILITY_IAM"
 confirm_changeset = true
-resolve_s3 = true
-s3_prefix = "grasp-backend"
+s3_bucket = "grasp-backend-np"
 region = "us-west-2"
 image_repositories = []
+stack_name = "grasp-backend-np"
 
 [default.package.parameters]
 resolve_s3 = true
