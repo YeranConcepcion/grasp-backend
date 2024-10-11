@@ -11,14 +11,52 @@
  * 
  */
 
+import pkg from 'pg';
+const { Client } = pkg;
+
 export const lambdaHandler = async (event, context) => {
+  // Create a new PostgreSQL client using environment variables
+  const client = new Client({
+    host: process.env.DB_HOST,
+    user: process.env.DB_USER,
+    password: process.env.DB_PASSWORD,
+    database: process.env.DB_NAME,
+    port: 5432 // default PostgreSQL port
+  });
+
+  try {
+    // Connect to the database
+    await client.connect();
+
+    // Execute a simple query (e.g., fetch the current time from the database)
+    const res = await client.query('SELECT NOW()');
+    console.log("Test Gloria a Dios")
+  
+
+    // Return the result
     const response = {
       statusCode: 200,
       body: JSON.stringify({
-        message: 'hello world',
-      })
+        message: 'Database connection successful',
+        timestamp: res.rows[0].now,
+      }),
     };
 
+    // Close the client connection
+    await client.end();
+
     return response;
-  };
+
+  } catch (err) {
+    console.error('Database connection error:', err);
+    return {
+      statusCode: 500,
+      body: JSON.stringify({
+        message: 'Database connection failed',
+        error: err.message,
+      }),
+    };
+  }
+};
+
   

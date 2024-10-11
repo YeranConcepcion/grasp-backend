@@ -1,58 +1,145 @@
-AWSTemplateFormatVersion: '2010-09-09'
+# AWSTemplateFormatVersion: '2010-09-09'
+# Transform: AWS::Serverless-2016-10-31
+# Description: >
+#   grasp-backend
+
+#   Sample SAM Template for grasp-backend
+
+# # More info about Globals: https://github.com/awslabs/serverless-application-model/blob/master/docs/globals.rst
+# Globals:
+#   Function:
+#     Timeout: 60
+
+# Resources:
+#   # HelloWorldFunction:
+#   #   Type: AWS::Serverless::Function # More info about Function Resource: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#awsserverlessfunction
+#   #   Properties:
+#   #     CodeUri: hello-world/
+#   #     Handler: app.lambdaHandler
+#   #     Runtime: nodejs20.x
+#   #     Architectures:
+#   #       - x86_64
+#   #     Events:
+#   #       HelloWorld:
+#   #         Type: Api # More info about API Event Source: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#api
+#   #         Properties:
+#   #           Path: /hello
+#   #           Method: get
+#   # Cognito User Pool for managing Users
+#   UserPool:
+#     Type: AWS::Cognito::UserPool
+#     Properties:
+#       UserPoolName: GraspUserPool
+#       AutoVerifiedAttributes:
+#         - email
+#       Policies:
+#         PasswordPolicy:
+#           MinimumLength: 8
+#           RequireLowercase: true
+#           RequireUppercase: true
+#           RequireNumbers: true
+#           RequireSymbols: false
+#       Schema:
+#         - Name: email
+#           AttributeDataType: String
+#           Required: true
+#           Mutable: true
+#   # App client for your frontend to interact with Cognito
+#   UserPoolClient:
+#     Type: AWS::Cognito::UserPoolClient
+#     Properties:
+#       ClientName: GraspUserPoolClient
+#       UserPoolId: !Ref UserPool
+#       GenerateSecret: false
+#       ExplicitAuthFlows:
+#         - USER_PASSWORD_AUTH
+#       CallbackURLs:
+#         - 'https://localhost:4200/callback'
+
+AWSTemplateFormatVersion: "2010-09-09"
 Transform: AWS::Serverless-2016-10-31
 Description: >
   grasp-backend
 
-  Sample SAM Template for grasp-backend
-  
-# More info about Globals: https://github.com/awslabs/serverless-application-model/blob/master/docs/globals.rst
 Globals:
   Function:
     Timeout: 60
 
 Resources:
-  # HelloWorldFunction:
-  #   Type: AWS::Serverless::Function # More info about Function Resource: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#awsserverlessfunction
-  #   Properties:
-  #     CodeUri: hello-world/
-  #     Handler: app.lambdaHandler
-  #     Runtime: nodejs20.x
-  #     Architectures:
-  #       - x86_64
-  #     Events:
-  #       HelloWorld:
-  #         Type: Api # More info about API Event Source: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#api
-  #         Properties:
-  #           Path: /hello
-  #           Method: get
-  # Cognito User Pool for managing Users
-  UserPool:
-    Type: AWS::Cognito::UserPool
+  # RDS Database
+  MyRDSInstance:
+    Type: AWS::RDS::DBInstance
     Properties:
-      UserPoolName: GraspUserPool
-      AutoVerifiedAttributes:
-        - email
-      Policies:
-        PasswordPolicy:
-          MinimumLength: 8
-          RequireLowercase: true
-          RequireUppercase: true
-          RequireNumbers: true
-          RequireSymbols: false
-      Schema:
-        - Name: email
-          AttributeDataType: String
-          Required: true
-          Mutable: true
-  # App client for your frontend to interact with Cognito
-  UserPoolClient:
-    Type: AWS::Cognito::UserPoolClient
-    Properties: 
-      ClientName: GraspUserPoolClient
-      UserPoolId: !Ref UserPool
-      GenerateSecret: false
-      ExplicitAuthFlows:
-        - USER_PASSWORD_AUTH
-      CallbackURLs:
-        - 'https://localhost:4200/callback'
+      DBInstanceIdentifier: GraspDB
+      AllocatedStorage: 20
+      DBInstanceClass: db.t3.micro
+      Engine: postgres
+      MasterUsername: !Ref DBUser
+      MasterUserPassword: !Ref DBPassword
+      VPCSecurityGroups:
+        - sg-0727dd245716520f2
+        - sg-0ee80240a808819fe
+      DBSubnetGroupName: !Ref MyDBSubnetGroup
 
+  MyDBSubnetGroup:
+    Type: AWS::RDS::DBSubnetGroup
+    Properties:
+      DBSubnetGroupDescription: "Subnet group for Grasp RDS"
+      SubnetIds:
+        - subnet-038dffeab4a24caaa
+        - subnet-07da24ac421dce491
+        - subnet-0276930738245ffb8
+
+  # Lambda Function with VPC configuration
+  # Tu mai la golda
+  DBFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: hello-world/ # Path to where app.mjs is located
+      Handler: app.lambdaHandler
+      Runtime: nodejs20.x
+      VpcConfig:
+        SecurityGroupIds:
+          - sg-0727dd245716520f2 # Security group that allows access to RDS
+          - sg-0ee80240a808819fe
+        SubnetIds:
+          - subnet-038dffeab4a24caaa
+          - subnet-07da24ac421dce491
+          - subnet-0276930738245ffb8
+      Environment:
+        Variables:
+          DB_HOST: !Ref RDSHost
+          DB_USER: !Ref DBUser
+          DB_PASSWORD: !Ref DBPassword
+          DB_NAME: !Ref DBName
+
+Parameters:
+  DBUser:
+    Type: String
+    Description: "The database username"
+    Default: grasp_user # This is the default username, you can change it during deployment if needed
+
+  DBPassword:
+    Type: String
+    Description: "The database password"
+    NoEcho: true # Hides the password in AWS console/logs
+    Default: grasp_2024! # You can change this during deployment as well
+
+  DBName:
+    Type: String
+    Description: "The database name"
+    Default: grasp_db # Default name for the database
+
+  RDSHost:
+    Type: String
+    Description: "The RDS endpoint for the database"
+    Default: "grasp-db.cluster-cd4iawo42q3m.us-east-2.rds.amazonaws.com"
+
+Outputs:
+  ApiUrl:
+    Description: "API Gateway endpoint URL for Prod stage"
+    Value: !Sub "https://${DBFunction}.execute-api.${AWS::Region}.amazonaws.com/Prod/hello-world"
+
+  RdsEndpoint:
+    Description: "RDS Database Endpoint"
+    Value: !GetAtt MyRDSInstance.Endpoint.Address

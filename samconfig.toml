@@ -16,9 +16,11 @@ lint = true
 capabilities = "CAPABILITY_IAM"
 confirm_changeset = true
 s3_bucket = "grasp-backend-np"
-region = "us-west-2"
+region = "us-east-2"
 image_repositories = []
-stack_name = "grasp-backend-np"
+resolve_s3 = true
+s3_prefix = "grasp-backend"
+parameter_overrides = "DBUser=\"grasp_admin\" DBName=\"grasp_db\" RDSHost=\"grasp-db.cluster-cd4iawo42q3m.us-east-2.rds.amazonaws.com\""
 
 [default.package.parameters]
 resolve_s3 = true
