@@ -91,7 +91,7 @@ Resources:
         - subnet-0276930738245ffb8
 
   # Lambda Function with VPC configuration
-  # Tu mai la golda
+
   DBFunction:
     Type: AWS::Serverless::Function
     Properties:

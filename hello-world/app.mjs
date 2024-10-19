@@ -28,18 +28,31 @@ export const lambdaHandler = async (event, context) => {
     // Connect to the database
     await client.connect();
 
-    // Execute a simple query (e.g., fetch the current time from the database)
-    const res = await client.query('SELECT NOW()');
-    console.log("Test Gloria a Dios")
-  
+    // Execute a query to fetch all rows from the 'users' table
+    const query = 'SELECT * FROM users';  // Modify the table name as needed
+    const result = await client.query(query);
 
-    // Return the result
+    // Check if any rows were returned
+    if (result.rows.length === 0) {
+      return {
+        statusCode: 404,
+        body: JSON.stringify({
+          message: 'No users found',
+        }),
+      };
+    }
+
+    // Return the users data
     const response = {
       statusCode: 200,
       body: JSON.stringify({
-        message: 'Database connection successful',
-        timestamp: res.rows[0].now,
+        message: 'Users retrieved successfully',
+        users: result.rows,  // Return all rows
       }),
+      headers: {
+        'Access-Control-Allow-Origin': '*',  // Enable CORS if needed
+        'Content-Type': 'application/json',
+      },
     };
 
     // Close the client connection
@@ -48,11 +61,11 @@ export const lambdaHandler = async (event, context) => {
     return response;
 
   } catch (err) {
-    console.error('Database connection error:', err);
+    console.error('Database query error:', err);
     return {
       statusCode: 500,
       body: JSON.stringify({
-        message: 'Database connection failed',
+        message: 'Database query failed',
         error: err.message,
       }),
     };
