@@ -69,7 +69,7 @@ Resources:
     Properties:
       CodeUri: getUsers/
       Handler: app.lambdaHandler
-      Runtime: nodejs20.x
+      Runtime: nodejs18.x
       Policies: AmazonDynamoDBFullAccess
       Architectures:
         - x86_64
@@ -85,7 +85,7 @@ Resources:
     Properties:
       CodeUri: getGasStations/
       Handler: app.lambdaHandler
-      Runtime: nodejs20.x
+      Runtime: nodejs18.x
       Policies: AmazonDynamoDBFullAccess
       Architectures:
         - x86_64

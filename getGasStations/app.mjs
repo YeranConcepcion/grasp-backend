@@ -13,8 +13,8 @@ export const lambdaHandler = async (event, context) => {
   }
   try{
     const command = new ScanCommand(parms)
-    var response = await docClient.send(command)
-    tableData = response.Items
+    var data = await docClient.send(command)
+    tableData = data.Items
 
     const response = {
       statusCode: 200,
