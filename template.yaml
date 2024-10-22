@@ -6,25 +6,96 @@ Description: >
   Sample SAM Template for grasp-backend
   
 # More info about Globals: https://github.com/awslabs/serverless-application-model/blob/master/docs/globals.rst
+# User parameters to control resource deployment
+Parameters:
+  EnvType:
+    Type: String
+    Description: Which environment do you want to deploy to? (DEV,NP,PROD)
+    AllowedValues:
+    - DEV
+    - NP
+    - PROD
+    Default: DEV
+# Check if we are in prod
+Conditions:
+  IsProd: !Equals [!Ref EnvType,'PROD']
+# Define properties that apply to all globally, and name global variables that can reference resources.
 Globals:
   Function:
     Timeout: 60
+    Environment:
+      Variables:
+        TABLE_GRASP_USERS: !Ref GraspUsersTable
+        TABLE_GAS_STATIONS: !Ref GasStationsTable
 
 Resources:
-  # HelloWorldFunction:
-  #   Type: AWS::Serverless::Function # More info about Function Resource: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#awsserverlessfunction
-  #   Properties:
-  #     CodeUri: hello-world/
-  #     Handler: app.lambdaHandler
-  #     Runtime: nodejs20.x
-  #     Architectures:
-  #       - x86_64
-  #     Events:
-  #       HelloWorld:
-  #         Type: Api # More info about API Event Source: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#api
-  #         Properties:
-  #           Path: /hello
-  #           Method: get
+  GraspUsersTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      BillingMode: PAY_PER_REQUEST
+      AttributeDefinitions:
+      - 
+        AttributeName: "User_ID"
+        AttributeType: "S"
+      KeySchema:
+      - 
+        AttributeName: "User_ID"
+        KeyType: "HASH"
+  GasStationsTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      BillingMode: PAY_PER_REQUEST
+      AttributeDefinitions:
+      - 
+        AttributeName: "Station_ID"
+        AttributeType: "S"
+      KeySchema:
+      - 
+        AttributeName: "Station_ID"
+        KeyType: "HASH"
+      
+  ApiDeployment:
+    Type: AWS::Serverless::Api
+    Properties:
+      Name: !Ref AWS::StackName
+      OpenApiVersion: 3.0.1
+      StageName: !Ref EnvType
+      Cors:
+        AllowMethods: "'GET,POST,OPTIONS'"
+        AllowHeaders: "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token'"
+        AllowOrigin: "'*'"
+  getUsersFunction:
+    Type: AWS::Serverless::Function # More info about Function Resource: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#awsserverlessfunction
+    Properties:
+      CodeUri: getUsers/
+      Handler: app.lambdaHandler
+      Runtime: nodejs20.x
+      Policies: AmazonDynamoDBFullAccess
+      Architectures:
+        - x86_64
+      Events:
+        getUsersEvent:
+          Type: Api # More info about API Event Source: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#api
+          Properties:
+            Path: /getusers
+            Method: get
+            RestApiId: !Ref ApiDeployment
+  getGasStations:
+    Type: AWS::Serverless::Function # More info about Function Resource: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#awsserverlessfunction
+    Properties:
+      CodeUri: getGasStations/
+      Handler: app.lambdaHandler
+      Runtime: nodejs20.x
+      Policies: AmazonDynamoDBFullAccess
+      Architectures:
+        - x86_64
+      Events:
+        getUsersEvent:
+          Type: Api # More info about API Event Source: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#api
+          Properties:
+            Path: /getgasstations
+            Method: get
+            RestApiId: !Ref ApiDeployment
   # Cognito User Pool for managing Users
   UserPool:
     Type: AWS::Cognito::UserPool
