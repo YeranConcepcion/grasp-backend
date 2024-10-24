@@ -80,6 +80,22 @@ Resources:
             Path: /getusers
             Method: get
             RestApiId: !Ref ApiDeployment
+  getClosestGasStations:
+    Type: AWS::Serverless::Function # More info about Function Resource: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#awsserverlessfunction
+    Properties:
+      CodeUri: getClosestGasStations/
+      Handler: app.lambdaHandler
+      Runtime: nodejs18.x
+      Policies: AmazonDynamoDBFullAccess
+      Architectures:
+        - x86_64
+      Events:
+        getUsersEvent:
+          Type: Api # More info about API Event Source: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#api
+          Properties:
+            Path: /getcloseststation
+            Method: get
+            RestApiId: !Ref ApiDeployment
   getGasStations:
     Type: AWS::Serverless::Function # More info about Function Resource: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#awsserverlessfunction
     Properties:
