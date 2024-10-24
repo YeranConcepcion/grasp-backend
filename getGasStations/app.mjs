@@ -8,7 +8,7 @@ export const lambdaHandler = async (event, context) => {
   var tableData = []
 
   var parms = {
-    ProjectionExpression: "Station_ID",
+    ProjectionExpression: "Station_ID,Station_City,Station_Gas_Price,Station_Latitude,Station_Longitude,Station_Name",
     TableName: table,
   }
   try{
